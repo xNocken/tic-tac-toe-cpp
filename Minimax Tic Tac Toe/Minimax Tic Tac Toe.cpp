@@ -39,8 +39,6 @@ struct Field
 
 std::map<std::string, Move> storage;
 
-
-
 std::string repeat(char charr, int count) {
     std::string result = "";
 
@@ -203,7 +201,9 @@ Move minimax(Field fields, bool isPlayer1 = false, int depth = 0) {
     return moves[bestMove];
 };
 
-void drawFields(Field field) {
+void drawFields(Field field, bool draw) {
+    int emptyCount = 1;
+
     for (int i = 0; i < rowLength; i++)
     {
         std::cout << "|";
@@ -222,7 +222,8 @@ void drawFields(Field field) {
             switch (field.arr[i][o])
             {
             case 0:
-                std::cout << " " << afterChar;
+                
+                std::cout << (draw ? std::to_string(emptyCount++) : " ") << afterChar;
                 break;
             case 1:
                 std::cout << "o" << afterChar;
@@ -250,27 +251,56 @@ void drawFields(Field field) {
 
 int main()
 {
-    while (true) {
-        char userinput;
+    std::string userinput;
 
+    std::cout << "Field Size (max 5)" << std::endl;
+    std::cin >> userinput;
+
+    rowLength = std::stoi(userinput);
+    bool gameRunning = true;
+
+    Field field = *(new Field());
+
+
+    while (gameRunning) {
+        int winner = 0;
+
+        std::string userinput;
+        drawFields(field, true);
+        std::cout << "Make your move" << std::endl;
         std::cin >> userinput;
 
-        int fields[5][5] = {
-            {0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0},
-        };
+        int choice = std::stoi(userinput) - 1;
 
-        Field field = *(new Field(fields));
-    
-        drawFields(field);
+        std::map<int, int[2]> emptySpots = getEmptySpots(field);
 
-        Move move = minimax(field, false, 0);
+        field.arr[emptySpots[choice][0]][emptySpots[choice][1]] = 1;
 
-        field.arr[move.position[0]][move.position[1]] = 2;
+        winner = checkWinner(field);
 
-        drawFields(field);
+        if (winner) {
+            std::cout << "player " << winner << "won";
+            gameRunning = false;
+        }
+
+        if (gameRunning) {
+            Move move = minimax(field, false, 0);
+
+            if (move.position[0] < 0) {
+                std::cout << "draw" << std::endl;
+                gameRunning = false;
+            }
+            if (gameRunning) {
+                field.arr[move.position[0]][move.position[1]] = 2;
+                winner = checkWinner(field);
+            }
+
+            if (winner) {
+                std::cout << "player " << winner << " won" << std::endl;
+                gameRunning = false;
+            }
+        }
     }
+
+    drawFields(field, false);
 }
